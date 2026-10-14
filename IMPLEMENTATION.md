@@ -191,15 +191,92 @@ location /api/ {
 
 ---
 
-## 5. OpenShift Deployment
+## 5. HuggingFace API Token
 
-### 5.1 Prerequisites
+The Whisper model weights are downloaded from **HuggingFace Hub** during the Docker image build (Stage 1). The model `Systran/faster-whisper-small` is public, so a token is not strictly required — however it is needed when:
+
+- The OpenShift build node's IP has been **rate-limited** by HuggingFace (common on shared clusters)
+- You want to use a **private or gated model** in the future
+- Builds are failing with `401 Unauthorized` or `429 Too Many Requests` from HuggingFace
+
+### 5.1 Get a HuggingFace Token
+
+1. Log in or register at **https://huggingface.co**
+2. Go to **Settings → Access Tokens → New token**
+3. Name: `openshift-build`
+4. Role: **Read**
+5. Copy the token (starts with `hf_`)
+
+### 5.2 Store the Token as an OpenShift Secret
+
+```bash
+oc create secret generic hf-token \
+  --from-literal=token=hf_xxxxxxxxxxxxxxxxxxxx
+```
+
+### 5.3 Pass the Token to the Build
+
+**Option A — pass as a build argument at start-build time:**
+
+```bash
+oc start-build speech-to-text-backend \
+  --build-arg HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxx \
+  --follow
+```
+
+**Option B — set it permanently in the BuildConfig** (so every future build uses it automatically):
+
+```bash
+oc patch bc/speech-to-text-backend --type=merge -p '{
+  "spec": {
+    "strategy": {
+      "dockerStrategy": {
+        "buildArgs": [
+          {
+            "name": "HF_TOKEN",
+            "valueFrom": {
+              "secretKeyRef": {
+                "name": "hf-token",
+                "key": "token"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}'
+```
+
+After patching, trigger a new build:
+
+```bash
+oc start-build speech-to-text-backend --follow
+```
+
+### 5.4 How the Token Is Used
+
+The `HF_TOKEN` build argument is picked up in Stage 1 of the Dockerfile and set as both `HUGGING_FACE_HUB_TOKEN` and `HF_TOKEN` environment variables — the two names that different versions of `huggingface_hub` recognise:
+
+```dockerfile
+ARG HF_TOKEN=""
+ENV HUGGING_FACE_HUB_TOKEN=${HF_TOKEN} \
+    HF_TOKEN=${HF_TOKEN}
+```
+
+The token is **only used during the build stage** to download model weights. It is not baked into the runtime image (Stage 2 does not inherit Stage 1 `ARG` values).
+
+---
+
+## 6. OpenShift Deployment
+
+### 6.1 Prerequisites
 
 - OpenShift 4.x cluster with `apelline-dev` namespace
 - `oc` CLI logged in
 - GitHub Personal Access Token with `Contents: Read` permission on the repo (for git-based builds)
 
-### 5.2 Build Setup
+### 6.2 Build Setup
 
 BuildConfigs were created using the **git-based strategy** with a GitHub token secret for authentication against the private repo.
 
@@ -230,7 +307,7 @@ oc new-build \
 
 > **Note:** `--binary` strategy BuildConfigs (created with `oc new-build --binary`) cannot be patched to use a git source — they are mutually exclusive. A new BuildConfig must be created if switching strategies.
 
-### 5.3 Image Registry
+### 6.3 Image Registry
 
 Built images are stored in the OpenShift internal registry:
 
@@ -241,14 +318,14 @@ image-registry.openshift-image-registry.svc:5000/apelline-dev/speech-to-text-fro
 
 Deployments reference the full internal registry path. Short names like `speech-to-text-backend:latest` (without the registry prefix) cause pods to attempt a pull from Docker Hub and fail with `ErrImagePull`.
 
-### 5.4 Deploying
+### 6.4 Deploying
 
 ```bash
 oc apply -f openshift/backend.yaml
 oc apply -f openshift/frontend.yaml
 ```
 
-### 5.5 Resource Allocation
+### 6.5 Resource Allocation
 
 | Component | Memory request | Memory limit | CPU request | CPU limit |
 |---|---|---|---|---|
@@ -257,7 +334,7 @@ oc apply -f openshift/frontend.yaml
 
 The backend probe `initialDelaySeconds` is set to 45 seconds to allow the Whisper model to load from disk before the readiness probe starts checking.
 
-### 5.6 Rebuilding After Code Changes
+### 6.6 Rebuilding After Code Changes
 
 ```bash
 # Push changes to GitHub first
@@ -272,7 +349,7 @@ The ImageStream trigger in the Deployment annotation automatically rolls out new
 
 ---
 
-## 6. Troubleshooting Log
+## 7. Troubleshooting Log
 
 Issues encountered and resolved during initial deployment:
 
@@ -283,10 +360,12 @@ Issues encountered and resolved during initial deployment:
 | `authentication error` on `oc new-build` with HTTPS | BuildConfig had no source secret | Created `github-token` basic-auth secret and attached with `--source-secret` |
 | `spec.source.git: Invalid value` | Tried to patch a binary BuildConfig to use a git source | Deleted and recreated BuildConfig using `--code=` flag with git URL |
 | `Error from server (NotFound): deployments.apps` | `oc apply -f openshift/` had not been run yet | Applied the YAML manifests after builds completed |
+| `error: remote: Write access to repository not granted. 403` | GitHub token secret was created without the actual token value (placeholder `<GITHUB_TOKEN>` was not replaced), or token lacked `repo` scope | Deleted secret, regenerated a classic token with `repo` scope, recreated secret with real value |
+| HuggingFace model download failing during build | Build node IP rate-limited by HuggingFace, or token not set | Create `hf-token` secret and pass `--build-arg HF_TOKEN=hf_xxx` to `oc start-build` |
 
 ---
 
-## 7. Future Improvements
+## 8. Future Improvements
 
 - **Streaming transcription** — use WebSockets to stream audio chunks and return partial transcripts in real time
 - **Medium model** — upgrade to `faster-whisper-medium` for better Finnish accuracy (requires 8 Gi RAM limit)

@@ -2,12 +2,17 @@
 FROM python:3.11-slim AS model-download
 
 ARG WHISPER_MODEL_SIZE=small
+# Optional: HuggingFace token — required if HF rate-limits the build node
+# Pass at build time: oc start-build ... --build-arg HF_TOKEN=hf_xxx
+ARG HF_TOKEN=""
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Download model into /models so Stage 2 can copy it
-ENV HF_HOME=/models
+ENV HF_HOME=/models \
+    HUGGING_FACE_HUB_TOKEN=${HF_TOKEN} \
+    HF_TOKEN=${HF_TOKEN}
 RUN python -c "from faster_whisper import WhisperModel; WhisperModel('${WHISPER_MODEL_SIZE}', device='cpu', compute_type='int8')"
 
 
