@@ -1,0 +1,96 @@
+# ── Speech-to-Text Backend ────────────────────────────────────────────────────
+# FastAPI + faster-whisper (CPU, int8)
+#
+# Before deploying, build and push the image:
+#   podman build -t quay.io/YOUR_ORG/speech-to-text-backend:latest ./backend
+#   podman push quay.io/YOUR_ORG/speech-to-text-backend:latest
+# Then replace the image field below.
+# ─────────────────────────────────────────────────────────────────────────────
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: speech-to-text-backend
+  labels:
+    app: speech-to-text
+    component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: speech-to-text
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: speech-to-text
+        component: backend
+    spec:
+      containers:
+        - name: backend
+          image: quay.io/YOUR_ORG/speech-to-text-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: WHISPER_MODEL_SIZE
+              value: "small"        # change to "medium" if you have more RAM
+            - name: COMPUTE_TYPE
+              value: "int8"         # CPU-optimised quantisation
+            - name: DEVICE
+              value: "cpu"
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "2"
+            limits:
+              memory: "6Gi"         # increase to 10Gi for "medium" model
+              cpu: "4"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 45  # model takes ~30s to load on first start
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 90
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: speech-to-text-backend
+  labels:
+    app: speech-to-text
+    component: backend
+spec:
+  selector:
+    app: speech-to-text
+    component: backend
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+# Expose backend externally (optional — needed only for direct API testing)
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: speech-to-text-backend
+  labels:
+    app: speech-to-text
+    component: backend
+spec:
+  to:
+    kind: Service
+    name: speech-to-text-backend
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

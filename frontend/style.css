@@ -1,0 +1,263 @@
+/* ═══════════════════════════════════════════════════════════════
+   Speech to Text Demo — Red Hat / OpenShift colour palette
+   Mobile-first layout
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --red:        #EE0000;
+  --dark-red:   #A30000;
+  --bg:         #F5F5F5;
+  --card-bg:    #FFFFFF;
+  --text:       #151515;
+  --muted:      #6A6E73;
+  --border:     #D2D2D2;
+  --success:    #3E8635;
+  --radius:     16px;
+  --shadow:     0 2px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Reset & Base ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: 'Red Hat Display', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── App shell ────────────────────────────────────────────────── */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ── Header ───────────────────────────────────────────────────── */
+header {
+  padding: 2.5rem 0 1.5rem;
+  text-align: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.brand-icon {
+  font-size: 1.4rem;
+}
+
+.badge {
+  display: inline-block;
+  background: var(--red);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.subtitle {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: 'Red Hat Mono', monospace;
+}
+
+/* ── Main ─────────────────────────────────────────────────────── */
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem 0 2rem;
+}
+
+/* ── Recorder section ─────────────────────────────────────────── */
+.recorder-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Big circular record button */
+.record-btn {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  border: none;
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.12s;
+  outline-offset: 4px;
+}
+
+.record-btn:active { transform: scale(0.94); }
+
+.btn-icon {
+  font-size: 3.2rem;
+  pointer-events: none;
+  user-select: none;
+  transition: transform 0.2s;
+  line-height: 1;
+}
+
+/* ── Recording state ──────────────────────────────────────────── */
+.record-btn[data-state="recording"] {
+  background: var(--red);
+  box-shadow: 0 4px 28px rgba(238, 0, 0, 0.35);
+}
+
+.pulse-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 3px solid var(--red);
+  opacity: 0;
+  pointer-events: none;
+  animation: none;
+}
+.ring-1 { inset: -14px; }
+.ring-2 { inset: -28px; }
+
+.record-btn[data-state="recording"] .ring-1 {
+  animation: pulse 1.6s ease-out infinite;
+}
+.record-btn[data-state="recording"] .ring-2 {
+  animation: pulse 1.6s ease-out infinite 0.55s;
+}
+
+@keyframes pulse {
+  0%   { opacity: 0.7; transform: scale(0.85); }
+  100% { opacity: 0;   transform: scale(1.25); }
+}
+
+/* ── Processing state ─────────────────────────────────────────── */
+.record-btn[data-state="processing"] {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.processing {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Status text */
+.status-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-align: center;
+  min-height: 1.5rem;
+}
+
+/* ── Result section ───────────────────────────────────────────── */
+.result-section {}
+
+.result-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem 1.25rem 1.5rem;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.result-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+}
+
+.lang-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--red);
+  background: rgba(238, 0, 0, 0.08);
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+}
+
+.copy-btn {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0.25rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.copy-btn:hover { border-color: var(--red); color: var(--red); }
+
+.transcript-text {
+  flex: 1;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.transcript-text .placeholder { color: var(--muted); font-style: italic; }
+.transcript-text .no-speech   { color: var(--muted); font-style: italic; }
+.transcript-text .error-text  { color: var(--dark-red); font-size: 0.9rem; }
+
+/* ── Footer ───────────────────────────────────────────────────── */
+footer {
+  padding: 1.25rem 0 1.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+footer strong { color: var(--text); }
+
+/* ── Larger screens ───────────────────────────────────────────── */
+@media (min-width: 560px) {
+  h1          { font-size: 2.4rem; }
+  .record-btn { width: 148px; height: 148px; }
+  .btn-icon   { font-size: 3.6rem; }
+}

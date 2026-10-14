@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#EE0000" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Speech to Text · OpenShift AI</title>
+  <!-- Red Hat font (loaded from Google Fonts; remove if offline) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&family=Red+Hat+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Header ─────────────────────────────────────────────── -->
+    <header>
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">🎙️</span>
+        <span class="badge">OpenShift AI Demo</span>
+      </div>
+      <h1>Speech to Text</h1>
+      <p class="subtitle">faster-whisper-small · CPU · int8</p>
+    </header>
+
+    <!-- ── Main content ───────────────────────────────────────── -->
+    <main>
+
+      <!-- Record button area -->
+      <section class="recorder-section" aria-label="Voice recorder">
+        <button
+          id="recordBtn"
+          class="record-btn"
+          data-state="idle"
+          aria-label="Start recording"
+          type="button"
+        >
+          <span class="btn-icon" aria-hidden="true">🎤</span>
+          <div class="pulse-ring ring-1" aria-hidden="true"></div>
+          <div class="pulse-ring ring-2" aria-hidden="true"></div>
+        </button>
+
+        <!-- Shown only while transcribing -->
+        <div id="processingIndicator" class="processing" hidden aria-live="polite">
+          <div class="spinner" aria-hidden="true"></div>
+          <span>Transcribing…</span>
+        </div>
+
+        <p class="status-text" aria-live="polite">
+          <span id="statusText"></span>
+        </p>
+      </section>
+
+      <!-- Transcript card -->
+      <section class="result-section" aria-label="Transcription result">
+        <div class="result-card">
+          <div class="result-meta">
+            <span id="languageBadge" class="lang-badge" hidden aria-label="Detected language"></span>
+            <button id="copyBtn" class="copy-btn" hidden type="button" aria-label="Copy transcript">
+              Copy
+            </button>
+          </div>
+          <div
+            id="transcript"
+            class="transcript-text"
+            aria-live="polite"
+            aria-label="Transcription"
+          >
+            <p class="placeholder">Your transcription will appear here…</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ── Footer ─────────────────────────────────────────────── -->
+    <footer>
+      <p>Served by <strong>OpenShift AI</strong> · faster-whisper CPU inference</p>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
