@@ -1,11 +1,27 @@
 # ── Speech-to-Text Backend ────────────────────────────────────────────────────
 # FastAPI + faster-whisper (CPU, int8)
 #
-# Before deploying, build and push the image:
-#   podman build -t quay.io/YOUR_ORG/speech-to-text-backend:latest ./backend
-#   podman push quay.io/YOUR_ORG/speech-to-text-backend:latest
-# Then replace the image field below.
+# Build the image inside OpenShift (no podman / Quay.io required):
+#
+#   Option A — build from GitHub:
+#     oc new-build https://github.com/apelline1/speech-to-text-demo \
+#       --context-dir=backend --name=speech-to-text-backend --strategy=docker
+#
+#   Option B — build from local directory:
+#     oc new-build --binary --strategy=docker --name=speech-to-text-backend
+#     oc start-build speech-to-text-backend --from-dir=./backend --follow
+#
+# The image is stored in the internal registry and referenced via ImageStream.
 # ─────────────────────────────────────────────────────────────────────────────
+---
+# ImageStream — tracks the built image inside the internal registry
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: speech-to-text-backend
+  labels:
+    app: speech-to-text
+    component: backend
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -14,6 +30,11 @@ metadata:
   labels:
     app: speech-to-text
     component: backend
+  annotations:
+    # Re-deploy automatically whenever a new image is built
+    image.openshift.io/triggers: >-
+      [{"from":{"kind":"ImageStreamTag","name":"speech-to-text-backend:latest"},
+        "fieldPath":"spec.template.spec.containers[0].image"}]
 spec:
   replicas: 1
   selector:
@@ -28,7 +49,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: quay.io/YOUR_ORG/speech-to-text-backend:latest
+          image: speech-to-text-backend:latest   # resolved from ImageStream
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
