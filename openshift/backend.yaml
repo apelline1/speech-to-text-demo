@@ -49,7 +49,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: speech-to-text-backend:latest   # resolved from ImageStream
+          image: image-registry.openshift-image-registry.svc:5000/apelline-dev/speech-to-text-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000

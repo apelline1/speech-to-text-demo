@@ -3,7 +3,8 @@ FROM python:3.11-slim AS model-download
 
 ARG WHISPER_MODEL_SIZE=small
 
-RUN pip install --no-cache-dir faster-whisper==1.0.3
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Download model into /models so Stage 2 can copy it
 ENV HF_HOME=/models
