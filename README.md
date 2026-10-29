@@ -87,13 +87,13 @@ OpenShift pulls the code and builds the Dockerfiles inside the cluster:
 
 ```bash
 # Backend (includes model download — takes ~10–15 min first time)
-oc new-build https://github.com/apelline1/speech-to-text-demo \
+oc new-build https://github.com/YOUR_GITHUB_USERNAME/speech-to-text-demo \
   --context-dir=backend \
   --name=speech-to-text-backend \
   --strategy=docker
 
 # Frontend
-oc new-build https://github.com/apelline1/speech-to-text-demo \
+oc new-build https://github.com/YOUR_GITHUB_USERNAME/speech-to-text-demo \
   --context-dir=frontend \
   --name=speech-to-text-frontend \
   --strategy=docker

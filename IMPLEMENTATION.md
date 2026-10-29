@@ -1,10 +1,10 @@
 # Speech-to-Text Demo — Implementation Document
 
 **Project:** Speech-to-Text Demo on OpenShift AI  
-**Author:** apelline  
+**Author:** Your Name  
 **Date:** October 2026  
-**Repo:** https://github.com/apelline1/speech-to-text-demo  
-**Cluster:** Rosa / OpenShift (`apelline-dev` namespace)
+**Repo:** https://github.com/YOUR_GITHUB_USERNAME/speech-to-text-demo  
+**Cluster:** Rosa / OpenShift (`YOUR_NAMESPACE` namespace)
 
 ---
 
@@ -49,7 +49,7 @@ Mobile Browser (mic)
        ▼
 ┌─────────────────────────────────────────────┐
 │                 OpenShift                   │
-│  Namespace: apelline-dev                    │
+│  Namespace: YOUR_NAMESPACE                    │
 │                                             │
 │  ┌──────────────────┐                       │
 │  │    Frontend      │  Route (public HTTPS) │◄── User
@@ -187,7 +187,7 @@ location /api/ {
 }
 ```
 
-`speech-to-text-backend` is resolved via Kubernetes DNS within the `apelline-dev` namespace.
+`speech-to-text-backend` is resolved via Kubernetes DNS within the `YOUR_NAMESPACE` namespace.
 
 ---
 
@@ -272,7 +272,7 @@ The token is **only used during the build stage** to download model weights. It 
 
 ### 6.1 Prerequisites
 
-- OpenShift 4.x cluster with `apelline-dev` namespace
+- OpenShift 4.x cluster with `YOUR_NAMESPACE` namespace
 - `oc` CLI logged in
 - GitHub Personal Access Token with `Contents: Read` permission on the repo (for git-based builds)
 
@@ -283,7 +283,7 @@ BuildConfigs were created using the **git-based strategy** with a GitHub token s
 ```bash
 # Create GitHub authentication secret
 oc create secret generic github-token \
-  --from-literal=username=apelline1 \
+  --from-literal=username=YOUR_GITHUB_USERNAME \
   --from-literal=password=<GITHUB_TOKEN> \
   --type=kubernetes.io/basic-auth
 
@@ -295,14 +295,14 @@ oc new-build \
   --strategy=docker \
   --context-dir=backend \
   --source-secret=github-token \
-  --code=https://github.com/apelline1/speech-to-text-demo.git
+  --code=https://github.com/YOUR_GITHUB_USERNAME/speech-to-text-demo.git
 
 oc new-build \
   --name=speech-to-text-frontend \
   --strategy=docker \
   --context-dir=frontend \
   --source-secret=github-token \
-  --code=https://github.com/apelline1/speech-to-text-demo.git
+  --code=https://github.com/YOUR_GITHUB_USERNAME/speech-to-text-demo.git
 ```
 
 > **Note:** `--binary` strategy BuildConfigs (created with `oc new-build --binary`) cannot be patched to use a git source — they are mutually exclusive. A new BuildConfig must be created if switching strategies.
@@ -312,8 +312,8 @@ oc new-build \
 Built images are stored in the OpenShift internal registry:
 
 ```
-image-registry.openshift-image-registry.svc:5000/apelline-dev/speech-to-text-backend:latest
-image-registry.openshift-image-registry.svc:5000/apelline-dev/speech-to-text-frontend:latest
+image-registry.openshift-image-registry.svc:5000/YOUR_NAMESPACE/speech-to-text-backend:latest
+image-registry.openshift-image-registry.svc:5000/YOUR_NAMESPACE/speech-to-text-frontend:latest
 ```
 
 Deployments reference the full internal registry path. Short names like `speech-to-text-backend:latest` (without the registry prefix) cause pods to attempt a pull from Docker Hub and fail with `ErrImagePull`.

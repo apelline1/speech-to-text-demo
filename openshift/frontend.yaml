@@ -4,7 +4,7 @@
 # Build the image inside OpenShift (no podman / Quay.io required):
 #
 #   Option A — build from GitHub:
-#     oc new-build https://github.com/apelline1/speech-to-text-demo \
+#     oc new-build https://github.com/YOUR_GITHUB_USERNAME/speech-to-text-demo \
 #       --context-dir=frontend --name=speech-to-text-frontend --strategy=docker
 #
 #   Option B — build from local directory:
@@ -49,7 +49,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: image-registry.openshift-image-registry.svc:5000/apelline-dev/speech-to-text-frontend:latest
+          image: image-registry.openshift-image-registry.svc:5000/YOUR_NAMESPACE/speech-to-text-frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
